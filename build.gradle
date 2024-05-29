@@ -88,6 +88,9 @@ dependencies {
     // Logback
     implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
 
+    // Context propagation
+    implementation 'io.micrometer:context-propagation:1.1.1'
+
     // Monitoring
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus:1.12.5'
 
