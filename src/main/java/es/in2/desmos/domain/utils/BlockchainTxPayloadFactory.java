@@ -29,7 +29,7 @@ public class BlockchainTxPayloadFactory {
     private final BrokerConfig brokerConfig;
 
     public Mono<BlockchainTxPayload> buildBlockchainTxPayload(String processId, Map<String, Object> dataMap, String previousHash) {
-        log.debug("ProcessID: {} - Building blockchain data...", processId);
+        log.debug("Building blockchain data...");
         try {
             String entityId = dataMap.get("id").toString();
             String entityIdHash = HASH_PREFIX + calculateSHA256(entityId);
@@ -49,17 +49,17 @@ public class BlockchainTxPayloadFactory {
                     .metadata(metadataList)
                     .build());
         } catch (JsonProcessingException | NoSuchAlgorithmException e) {
-            log.warn("ProcessID: {} - Error creating blockchain transaction payload: {}", processId, e.getMessage());
+            log.warn("Error creating blockchain transaction payload: {}", e.getMessage());
             return Mono.error(new HashLinkException("Error creating blockchain transaction payload"));
         }
     }
 
     public Mono<String> calculatePreviousHashIfEmpty(String processId, Map<String, Object> dataMap) {
         try {
-            log.debug("ProcessID: {} - Calculating previous hash...", processId);
+            log.debug("Calculating previous hash...");
             return Mono.just(calculateSHA256(objectMapper.writeValueAsString(dataMap)));
         } catch (JsonProcessingException | NoSuchAlgorithmException e) {
-            log.warn("ProcessID: {} - Error creating previous hash from notification data: {}", processId, e.getMessage());
+            log.warn("Error creating previous hash from notification data: {}", e.getMessage());
             return Mono.error(new HashLinkException("Error creating previous hash value from notification data"));
         }
     }

@@ -44,7 +44,7 @@ public class BrokerListenerServiceImpl implements BrokerListenerService {
 
     @Override
     public Mono<Void> processBrokerNotification(String processId, BrokerNotification brokerNotification) {
-        log.info("ProcessID: {} - Processing Broker Notification...", processId);
+        log.info("Processing Broker Notification...");
         // Validate BrokerNotification is not null and has data
         return getDataFromBrokerNotification(brokerNotification)
                 // Validate if BrokerNotification is from an external source or self-generated
@@ -59,12 +59,12 @@ public class BrokerListenerServiceImpl implements BrokerListenerService {
                         .event(Collections.singletonList(brokerNotification))
                         .priority(eventQueuePriority)
                         .build()))
-                .doOnSuccess(unused -> log.info("ProcessID: {} - Broker Notification processed successfully.", processId))
+                .doOnSuccess(unused -> log.info("Broker Notification processed successfully."))
                 .doOnError(throwable -> {
                     if (throwable instanceof BrokerNotificationSelfGeneratedException) {
-                        log.info("ProcessID: {} - Self-Generated Broker Notification. It does not need to do nothing.", processId);
+                        log.info("Self-Generated Broker Notification. It does not need to do nothing.");
                     } else {
-                        log.error("ProcessID: {} - Error processing Broker Notification: {}", processId, throwable.getMessage());
+                        log.error("Error processing Broker Notification: {}", throwable.getMessage());
                     }
                 });
     }
@@ -84,14 +84,14 @@ public class BrokerListenerServiceImpl implements BrokerListenerService {
                             return Mono.error(new BrokerNotificationSelfGeneratedException("BrokerNotification is self-generated"));
                         }
                     } catch (JsonProcessingException | NoSuchAlgorithmException e) {
-                        log.warn("ProcessID: {} - Error processing JSON: {}", processId, e.getMessage());
+                        log.warn("Error processing JSON: {}", e.getMessage());
                         return Mono.error(new BrokerNotificationParserException("Error processing JSON"));
                     }
-                    log.debug("ProcessID: {} - BrokerNotification is from external source", processId);
+                    log.debug("BrokerNotification is from external source");
                     return Mono.just(dataMap);
                 })
                 .switchIfEmpty(Mono.defer(() -> {
-                    log.debug("ProcessID: {} - No audit record found; assuming BrokerNotification is from external source", processId);
+                    log.debug("No audit record found; assuming BrokerNotification is from external source");
                     return Mono.just(dataMap);
                 }));
     }

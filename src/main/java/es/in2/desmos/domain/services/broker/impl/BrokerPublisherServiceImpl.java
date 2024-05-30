@@ -30,12 +30,12 @@ public class BrokerPublisherServiceImpl implements BrokerPublisherService {
                 .switchIfEmpty(Mono.just(""))
                 .flatMap(response -> {
                     if(response.isBlank()) {
-                        log.info("ProcessID: {} - Entity doesn't exist", processId);
+                        log.info("Entity doesn't exist");
                         // Logic for when the entity does not exist, for example, creating it
                         return postEntity(processId, retrievedBrokerEntity);
                     } else {
                         // Logic for when the entity exists
-                        log.info("ProcessId: {} - Entity exists", processId);
+                        log.info("Entity exists");
                         return updateEntity(processId, retrievedBrokerEntity);
                     }
                 });

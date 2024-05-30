@@ -41,7 +41,7 @@ public class BlockchainListenerServiceImpl implements BlockchainListenerService 
                 // Enqueue DLTNotification to DataRetrievalQueue
                 .flatMap(eventQueuePriority ->
                 {
-                    log.debug("ProcessID: {} - Enqueuing Blockchain Notification to DataRetrievalQueue...", processId);
+                    log.debug("Enqueuing Blockchain Notification to DataRetrievalQueue...");
                     return pendingSubscribeEventsQueue.enqueueEvent(EventQueue.builder()
                             .event(Collections.singletonList(blockchainNotification))
                             .priority(eventQueuePriority)

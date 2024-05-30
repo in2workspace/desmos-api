@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.context.Context;
 
 import java.util.Objects;
 
@@ -34,7 +35,7 @@ public class SubscribeWorkflowImpl implements SubscribeWorkflow {
 
     @Override
     public Flux<Void> startSubscribeWorkflow(String processId) {
-        log.info("ProcessID: {} - Starting the Subscribe Workflow...", processId);
+        log.info("Starting the Subscribe Workflow...");
         // Get the event stream for the events that need to be synchronized to the local broker
         return pendingSubscribeEventsQueue.getEventStream()
                 // Get the next event (BlockchainNotification) from the queue
@@ -57,8 +58,9 @@ public class SubscribeWorkflowImpl implements SubscribeWorkflow {
                                                                 .then(auditRecordService.buildAndSaveAuditRecordFromBlockchainNotification(processId, blockchainNotification, retrievedBrokerEntity, AuditRecordStatus.PUBLISHED))
                                                 )
                                 )
-                                .doOnSuccess(success -> log.info("ProcessID: {} - Subscribe Workflow completed successfully.", processId))
-                                .doOnError(error -> log.error("ProcessID: {} - Error occurred while processing the Subscribe Workflow: {}", processId, error.getMessage())));
+                                .doOnSuccess(success -> log.info("Subscribe Workflow completed successfully."))
+                                .doOnError(error -> log.error("Error occurred while processing the Subscribe Workflow: {}", error.getMessage())))
+                .contextWrite(Context.of("processId", processId));
     }
 
 }

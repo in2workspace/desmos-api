@@ -44,6 +44,10 @@ management:
       enabled: true
     prometheus:
       enabled: true
+  tracing:
+    baggage:
+      correlation:
+        fields: processId
 
 # SpringDoc Configuration - OpenAPI 3.0 Documentation & Swagger UI
 springdoc:

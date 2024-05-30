@@ -2,6 +2,7 @@ package es.in2.desmos.infrastructure.configs;
 
 import io.micrometer.context.ContextRegistry;
 import io.micrometer.context.ContextSnapshotFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -20,6 +21,7 @@ import static org.apache.commons.lang3.ObjectUtils.isEmpty;
  *
  * @see <a href="https://github.com/micrometer-metrics/context-propagation">context-propagation</a>
  */
+@Slf4j
 @Configuration
 @ConditionalOnClass({ContextRegistry.class, ContextSnapshotFactory.class})
 @ConditionalOnProperty(value = "management.tracing.baggage.correlation.fields", matchIfMissing = true)
@@ -27,15 +29,18 @@ public class MdcContextPropagationConfiguration {
 
     public MdcContextPropagationConfiguration(@Value("${management.tracing.baggage.correlation.fields}")
                                               List<String> fields) {
+
+        Hooks.enableAutomaticContextPropagation();
+        log.debug("Automatic Context Propagation enabled");
+
         if (!isEmpty(fields)) {
             fields.forEach(claim -> ContextRegistry.getInstance()
                     .registerThreadLocalAccessor(claim,
                             () -> MDC.get(claim),
                             value -> MDC.put(claim, value),
                             () -> MDC.remove(claim)));
-            return;
         }
 
-        Hooks.enableAutomaticContextPropagation();
+        log.debug("Registered fields on Thread Local Accessor");
     }
 }

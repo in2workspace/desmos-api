@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.context.Context;
 
 import java.util.Objects;
 
@@ -34,7 +35,7 @@ public class PublishWorkflowImpl implements PublishWorkflow {
 
     @Override
     public Flux<Void> startPublishWorkflow(String processId) {
-        log.info("ProcessID: {} - Starting the Publish Workflow...", processId);
+        log.info("Starting the Publish Workflow...");
         // Get the event stream from the data publication queue
         return pendingPublishEventsQueue.getEventStream()
                 // Get the first event from the event stream,
@@ -57,10 +58,11 @@ public class PublishWorkflowImpl implements PublishWorkflow {
                                                                 .then(blockchainPublisherService.publishDataToBlockchain(processId, blockchainTxPayload))
                                                                 .then(auditRecordService.buildAndSaveAuditRecordFromBrokerNotification(processId, brokerNotification.data().get(0), AuditRecordStatus.PUBLISHED, blockchainTxPayload))))
                                 .doOnSuccess(success ->
-                                        log.info("ProcessID: {} - Publish Workflow completed successfully.", processId))
+                                        log.info("Publish Workflow completed successfully."))
                                 .doOnError(error ->
-                                        log.error("ProcessID: {} - Error occurred while processing the Publish Workflow: {}", processId, error.getMessage()))
-                );
+                                        log.error("Error occurred while processing the Publish Workflow: {}", error.getMessage()))
+                )
+                .contextWrite(Context.of("processId", processId));
     }
 
 }

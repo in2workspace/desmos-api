@@ -76,18 +76,18 @@ public class BlockchainDataSyncJobImpl implements BlockchainDataSyncJob {
     }
 
     private Flux<BlockchainNotification> deserializeBlockchainNotifications(String processId, String responseList) {
-        log.debug("ProcessID: {} - Deserializing response from DLT Adapter: {}", processId, responseList);
+        log.debug("Deserializing response from DLT Adapter: {}", responseList);
         try {
             List<BlockchainNotification> notificationList = objectMapper.readValue(responseList, new TypeReference<>() {
             });
             if (notificationList.isEmpty()) {
-                log.info("ProcessID: {} - Response list is empty, no notifications were found.", processId);
+                log.info("Response list is empty, no notifications were found.");
             } else {
-                log.info("ProcessID: {} - Notifications were found.", processId);
+                log.info("Notifications were found.");
             }
             return Flux.fromIterable(notificationList);
         } catch (JsonProcessingException e) {
-            log.warn("ProcessID: {} - Error processing JSON: {}", processId, responseList, e);
+            log.warn("Error processing JSON: {}", responseList, e);
             throw new JsonReadingException("Error deserializing response from DLT Adapter");
         }
     }

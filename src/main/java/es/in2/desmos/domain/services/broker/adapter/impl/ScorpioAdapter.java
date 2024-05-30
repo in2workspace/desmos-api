@@ -3,12 +3,12 @@ package es.in2.desmos.domain.services.broker.adapter.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import es.in2.desmos.infrastructure.configs.BrokerConfig;
 import es.in2.desmos.domain.exceptions.JsonReadingException;
 import es.in2.desmos.domain.exceptions.RequestErrorException;
 import es.in2.desmos.domain.exceptions.SubscriptionCreationException;
 import es.in2.desmos.domain.models.BrokerSubscription;
 import es.in2.desmos.domain.services.broker.adapter.BrokerAdapterService;
+import es.in2.desmos.infrastructure.configs.BrokerConfig;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -78,7 +78,7 @@ public class ScorpioAdapter implements BrokerAdapterService {
                 .retrieve()
                 .onStatus(status -> status.isSameCodeAs(HttpStatusCode.valueOf(404)),
                         response -> {
-                            log.debug("ProcessId: {}, Entity not found", processId);
+                            log.debug(" Entity not found");
                             return response.bodyToMono(String.class).flatMap(body -> Mono.empty());
                         }
                 )
@@ -124,7 +124,7 @@ public class ScorpioAdapter implements BrokerAdapterService {
                 .flatMap(subscriptionList -> {
                     if (subscriptionList.isEmpty()) {
                         // Use Case: The subscription list is empty.
-                        log.debug("ProcessId: {}, Subscription list is empty. Creating new subscription.", processId);
+                        log.debug(" Subscription list is empty. Creating new subscription.");
                         return postSubscription(brokerSubscription);
                     } else {
                         // Use Case: The subscription list is not empty.
@@ -135,13 +135,13 @@ public class ScorpioAdapter implements BrokerAdapterService {
                             // The subscription you are trying to create has been found in the list with the same
                             // endpoint that you are trying to create.
                             BrokerSubscription subscriptionItem = subscriptionItemFound.get();
-                            log.debug("ProcessId: {}, Subscription Entity Found: {}", processId, subscriptionItem);
+                            log.debug(" Subscription Entity Found: {}", subscriptionItem);
 
-                            log.debug("ProcessId: {}, Subscription already exists. Checking if it needs to be updated.", processId);
+                            log.debug(" Subscription already exists. Checking if it needs to be updated.");
                             if (checkIfBothSubscriptionsHaveTheSameEntityList(subscriptionItem.entities(), brokerSubscription.entities())) {
                                 // Use Case: The subscription you are trying to create already exists in the list
                                 // and the entities are the same.
-                                log.info("ProcessId: {}, Does not need to be created.", processId);
+                                log.info(" Does not need to be created.");
                                 return Mono.empty();
                             } else {
                                 // Use Case: The subscription you are trying to create already exists in the list
@@ -152,21 +152,22 @@ public class ScorpioAdapter implements BrokerAdapterService {
                                         .entities(brokerSubscription.entities())
                                         .notification(brokerSubscription.notification())
                                         .build();
-                                log.info("ProcessId: {}, Updating subscription...", processId);
+                                log.info(" Updating subscription...");
                                 return updateSubscription(updatedSubscription)
                                         .doOnSuccess(result -> log.debug(SUBSCRIPTION_UPDATED_MESSAGE, processId))
                                         .doOnError(e -> log.error(ERROR_UPDATING_SUBSCRIPTION_MESSAGE, processId, e.getMessage()));
                             }
                         } else {
-                            log.debug("ProcessId: {}, Subscription Entity Not Found", processId);
+                            log.debug(" Subscription Entity Not Found");
                             // Use Case: The subscription you are trying to create does not exist in the list.
-                            log.info("ProcessId: {}, Subscription does not exist. Creating new subscription...", processId);
+                            log.info(" Subscription does not exist. Creating new subscription...");
                             return postSubscription(brokerSubscription);
                         }
                     }
                 })
-                .doOnSuccess(result -> log.debug("ProcessId: {}, Subscription created successfully", processId))
-                .doOnError(e -> log.error("ProcessId: {}, Error creating subscription", processId, e))
+
+                .doOnSuccess(result -> log.debug(" Subscription created successfully"))
+                .doOnError(e -> log.error(" Error creating subscription", e))
                 .then();
     }
 
@@ -255,11 +256,11 @@ public class ScorpioAdapter implements BrokerAdapterService {
             if (jsonNode.has("id")) {
                 return Mono.just(jsonNode.get("id").asText());
             } else {
-                log.error(ENTITY_ID_NOT_FOUND_ERROR_MESSAGE, processId);
+                log.error(ENTITY_ID_NOT_FOUND_ERROR_MESSAGE);
                 throw new JsonReadingException("Entity ID field not found");
             }
         } catch (Exception e) {
-            log.error(READING_JSON_ENTITY_ERROR_MESSAGE, processId, e.getMessage());
+            log.error(READING_JSON_ENTITY_ERROR_MESSAGE, e.getMessage());
             throw new JsonReadingException(e.getMessage());
         }
     }

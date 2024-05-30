@@ -41,7 +41,7 @@ public class DataSyncServiceImpl implements DataSyncService {
      */
     @Override
     public Mono<Void> synchronizeData(String processId) {
-        log.debug("ProcessID: {} - Synchronizing data...", processId);
+        log.debug("Synchronizing data...");
         return Mono.empty();
     }
 
@@ -52,10 +52,10 @@ public class DataSyncServiceImpl implements DataSyncService {
      */
     @Override
     public Mono<String> getEntityFromExternalSource(String processId, BlockchainNotification blockchainNotification) {
-        log.debug("ProcessID: {} - Retrieving entity from the external broker...", processId);
+        log.debug("Retrieving entity from the external broker...");
         // Get the External Broker URL from the dataLocation
         String externalBrokerURL = extractContextBrokerUrlFromDataLocation(blockchainNotification.dataLocation());
-        log.debug("ProcessID: {} - External Broker URL: {}", processId, externalBrokerURL);
+        log.debug("External Broker URL: {}", processId, externalBrokerURL);
         // Retrieve entity from the External Broker
 
         return apiConfig.webClient()
@@ -67,7 +67,7 @@ public class DataSyncServiceImpl implements DataSyncService {
                 .retrieve()
                 .onStatus(status -> status != null && status.isSameCodeAs(HttpStatusCode.valueOf(200)),
                         clientResponse -> {
-                            log.debug("ProcessID: {} - Entity retrieved successfully from the external broker", processId);
+                            log.debug("Entity retrieved successfully from the external broker");
                             return Mono.empty();
                         })
                 .onStatus(status -> status != null && status.is4xxClientError(),
@@ -93,7 +93,7 @@ public class DataSyncServiceImpl implements DataSyncService {
     private Mono<String> verifyRetrievedEntityDataIntegrity(String processId,
                                                             BlockchainNotification blockchainNotification,
                                                             String retrievedBrokerEntity) {
-        log.debug("ProcessID: {} - Verifying the data integrity of the retrieved entity...", processId);
+        log.debug("Verifying the data integrity of the retrieved entity...");
         try {
             // Get the hash of the retrieved entity
             String retrievedEntityHash = calculateSHA256(sortAttributesAlphabetically(retrievedBrokerEntity));
@@ -104,7 +104,7 @@ public class DataSyncServiceImpl implements DataSyncService {
                 // It is the first entity in the chain, and we need to verify that
                 // the hash of the retrieved entity is equal to the hash in the dataLocation
                 if(!retrievedEntityHash.equals(dataLocationHashLink)) {
-                    log.error("ProcessID: {} - Error occurred while verifying the data integrity of the retrieved entity: Hash verification failed", processId);
+                    log.error("Error occurred while verifying the data integrity of the retrieved entity: Hash verification failed");
                     return Mono.error(new HashLinkException("Hash verification failed"));
                 }
             } else {
@@ -113,13 +113,13 @@ public class DataSyncServiceImpl implements DataSyncService {
                 // to the hashLink in the dataLocation
                 String calculatedEntityHasLink = calculateHashLink(previousEntityHash, retrievedEntityHash);
                 if(!calculatedEntityHasLink.equals(dataLocationHashLink)) {
-                    log.error("ProcessID: {} - Error occurred while verifying the data integrity of the retrieved entity: HashLink verification failed", processId);
+                    log.error("Error occurred while verifying the data integrity of the retrieved entity: HashLink verification failed");
                     return Mono.error(new HashLinkException("HashLink verification failed"));
                 }
             }
             return Mono.just(retrievedBrokerEntity);
         } catch (JsonProcessingException | NoSuchAlgorithmException e) {
-            log.warn("ProcessID: {} - Error occurred while sorting the attributes of the retrieved entity: {}", processId, e.getMessage());
+            log.warn("Error occurred while sorting the attributes of the retrieved entity: {}", e.getMessage());
             return Mono.error(new HashLinkException("Integrity of the retrieved entity verification failed"));
         }
     }
@@ -147,10 +147,10 @@ public class DataSyncServiceImpl implements DataSyncService {
     private Mono<String> verifyDataConsistency(String processId, AuditRecord auditRecord, BlockchainNotification blockchainNotification, String retrievedBrokerEntity) {
         String previousEntityHash = blockchainNotification.previousEntityHash().substring(2);
         if(auditRecord.getEntityHashLink().equals(previousEntityHash)) {
-            log.info("ProcessID: {} - Data consistency verification passed successfully", processId);
+            log.info("Data consistency verification passed successfully");
             return Mono.just(retrievedBrokerEntity);
         } else {
-            log.warn("ProcessID: {} - Error occurred while verifying the data consistency of the retrieved entity: Data consistency verification failed", processId);
+            log.warn("Error occurred while verifying the data consistency of the retrieved entity: Data consistency verification failed");
             return Mono.error(new HashLinkException("Data consistency verification failed"));
         }
     }

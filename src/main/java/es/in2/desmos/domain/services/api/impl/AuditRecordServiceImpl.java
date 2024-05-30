@@ -35,7 +35,7 @@ public class AuditRecordServiceImpl implements AuditRecordService {
     @Override
     public Mono<Void> buildAndSaveAuditRecordFromBrokerNotification(String processId, Map<String, Object> dataMap,
                                                                     AuditRecordStatus status, BlockchainTxPayload blockchainTxPayload) {
-        log.info("ProcessID: {} - Building and saving audit record from broker notification...", processId);
+        log.info("Building and saving audit record from broker notification...");
         // Extract the entity ID from the data location
         String entityId = dataMap.get("id").toString();
         // Get the most recent audit record for the entityId and get the most recent audit record overall
@@ -75,11 +75,11 @@ public class AuditRecordServiceImpl implements AuditRecordService {
                         // with the hash of the current entity
                         auditRecord.setHashLink(setAuditRecordHashLink(lastAuditRecordRegistered, auditRecordHash));
                     } catch (JsonProcessingException | NoSuchAlgorithmException e) {
-                        log.warn("ProcessID: {} - Error building and saving audit record: {}", processId, e.getMessage());
+                        log.warn("Error building and saving audit record: {}", e.getMessage());
                         return Mono.error(e);
                     }
                     return auditRecordRepository.save(auditRecord)
-                            .doOnSuccess(unused -> log.info("ProcessID: {} - Audit record saved successfully. - Status: {}", processId, status))
+                            .doOnSuccess(unused -> log.info("Audit record saved successfully. - Status: {}", status))
                             .then();
                 })
                 .then();
@@ -136,7 +136,7 @@ public class AuditRecordServiceImpl implements AuditRecordService {
                         // with the hash of the current entity
                         auditRecord.setHashLink(setAuditRecordHashLink(lastAuditRecordRegistered, auditRecordHash));
                         return auditRecordRepository.save(auditRecord)
-                                .doOnSuccess(unused -> log.info("ProcessID: {} - Audit record saved successfully. - Status: {}", processId, status))
+                                .doOnSuccess(unused -> log.info("Audit record saved successfully. - Status: {}", status))
                                 .then();
                     } catch (JsonProcessingException | NoSuchAlgorithmException e) {
                         return Mono.error(e);
@@ -169,13 +169,13 @@ public class AuditRecordServiceImpl implements AuditRecordService {
      */
     @Override
     public Mono<AuditRecord> findLatestAuditRecordForEntity(String processId, String entityId) {
-        log.debug("ProcessID: {} - Fetching latest audit record for entity ID: {}", processId, entityId);
+        log.debug("Fetching latest audit record for entity ID: {}", entityId);
         return auditRecordRepository.findMostRecentPublishedOrDeletedByEntityId(entityId);
     }
 
     @Override
     public Mono<AuditRecord> getLastPublishedAuditRecordForProducerByEntityId(String processId, String entityId) {
-        log.debug("ProcessID: {} - Getting last audit record by entity id and producer: {}", processId, entityId);
+        log.debug("Getting last audit record by entity id and producer: {}", entityId);
         return auditRecordRepository.findLatestPublishedAuditRecordForProducerByEntityId(entityId);
     }
 
@@ -189,13 +189,13 @@ public class AuditRecordServiceImpl implements AuditRecordService {
 
     @Override
     public Mono<AuditRecord> findLatestConsumerPublishedAuditRecordByEntityId(String processId, String entityId) {
-        log.debug("ProcessID: {} - Fetching all audit records...", processId);
+        log.debug("Fetching all audit records...");
         return auditRecordRepository.findLastPublishedConsumerAuditRecordByEntityId(entityId);
     }
 
     @Override
     public Mono<AuditRecord> findLatestConsumerPublishedAuditRecord(String processId) {
-        log.debug("ProcessID: {} - Fetching all audit records...", processId);
+        log.debug("Fetching all audit records...");
         return auditRecordRepository.findLastPublishedConsumerAuditRecord();
     }
 
